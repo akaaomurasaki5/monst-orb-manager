@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>モンスト オーブ管理</title>
+  <style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5;
+    margin: 0;
+    padding: 30px;
+  }
+
+  .container {
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    text-align: center;
+  }
+
+  .card {
+    background-color: white;
+    padding: 20px;
+    margin-bottom: 15px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .card label {
+    font-size: 20px;
+    cursor: pointer;
+  }
+
+  .card input {
+    transform: scale(1.4);
+    margin-right: 12px;
+  }
+
+  .total {
+    background-color: white;
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: 12px;
+    text-align: center;
+  }
+
+  button {
+    width: 100%;
+    padding: 14px;
+    margin-top: 15px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 8px;
+    border: 1px solid #999;
+  }
+</style>
+</head>
+
+<body>
+
+  <h1>モンスト 定期コンテンツ オーブ管理</h1>
+
+  <p>今月のオーブ獲得状況を管理します。</p>
+
+  <div class="card">
+    <label>
+      <input type="checkbox" class="content" data-orb="68">
+      覇者の塔：68個
+    </label>
+  </div>
+
+  <div class="card">
+    <label>
+      <input type="checkbox" class="content" data-orb="55">
+      禁忌の獄：55個
+    </label>
+  </div>
+
+  <div class="card">
+    <label>
+      <input type="checkbox" class="content" data-orb="20">
+      未開の砂宮：20個
+    </label>
+  </div>
+
+  <div class="card">
+    <label>
+      <input type="checkbox" class="content" data-orb="10">
+      天魔の孤城：10個
+    </label>
+  </div>
+
+  <div class="total">
+    <h2>
+      獲得オーブ合計：
+      <span id="total">0</span>個
+    </h2>
+  </div>
+
+  <button id="resetButton">
+    今月のデータをリセット
+  </button>
+
+</div>
+  <script>
+    const contents = document.querySelectorAll(".content");
+    const total = document.getElementById("total");
+
+    function calculateTotal() {
+      let sum = 0;
+
+      contents.forEach(function(content) {
+        if (content.checked) {
+          sum += Number(content.dataset.orb);
+        }
+      });
+
+      total.textContent = sum;
+    }
+
+    function saveData() {
+      const checkedData = [];
+
+      contents.forEach(function(content) {
+        checkedData.push(content.checked);
+      });
+
+      localStorage.setItem(
+        "monstOrbData",
+        JSON.stringify(checkedData)
+      );
+    }
+
+    function loadData() {
+      const savedData = localStorage.getItem("monstOrbData");
+
+      if (savedData !== null) {
+        const checkedData = JSON.parse(savedData);
+
+        contents.forEach(function(content, index) {
+          content.checked = checkedData[index];
+        });
+      }
+
+      calculateTotal();
+    }
+
+    contents.forEach(function(content) {
+      content.addEventListener("change", function() {
+        calculateTotal();
+        saveData();
+      });
+    });
+const resetButton = document.getElementById("resetButton");
+
+resetButton.addEventListener("click", function() {
+  contents.forEach(function(content) {
+    content.checked = false;
+  });
+
+  localStorage.removeItem("monstOrbData");
+  calculateTotal();
+});
+
+    loadData();
+  </script>
+</body>
+</html>
