@@ -56,70 +56,581 @@
     border-radius: 8px;
     border: 1px solid #999;
   }
+  .section-title｛
+  margin-top: 35px;
+  margin-bottom: 15px;
+  font-size: 26px;
+  }
 </style>
 </head>
-
 <body>
+  <div class="container">
+    <h1>モンスト 定期コンテンツ オーブ管理</h1>
+    <p>今月のオーブ獲得状況を管理します。</p>
 
-  <h1>モンスト 定期コンテンツ オーブ管理</h1>
+    <div class="card">
+      <h2>現在時刻</h2>
+      <p id="currentTime">読み込み中...</p>
+    </div>
 
-  <p>今月のオーブ獲得状況を管理します。</p>
+    <div id="contentList"></div>
 
-  <div class="card">
-    <label>
-      <input type="checkbox" class="content" data-orb="68">
-      覇者の塔：68個
-    </label>
+    <div class="total">
+      <h2>
+        獲得オーブ合計：
+        <span id="total">0</span>個
+      </h2>
+    </div>
+
+    <button id="resetButton">
+      今月のデータをリセット
+    </button>
   </div>
 
-  <div class="card">
-    <label>
-      <input type="checkbox" class="content" data-orb="55">
-      禁忌の獄：55個
-    </label>
-  </div>
+  <script>
+  const contentList = document.getElementById("contentList");
+  const total = document.getElementById("total");
+  const currentTime = document.getElementById("currentTime");
+  const resetButton = document.getElementById("resetButton");
 
-  <div class="card">
-    <label>
-      <input type="checkbox" class="content" data-orb="20">
-      未開の砂宮：20個
-    </label>
-  </div>
+  const contentsData = [
+  {
+    id: "tenma",
+    name: "天魔の孤城",
+    orb: 5,
+    startDay: 1,
+    monthlyReset: true
+  },
+  {
+    id: "hasya",
+    name: "覇者の塔",
+    orb: 68,
+    startDay: 7,
+    endDay: 25,
+    crossMonth: false
+  },
+  {
+    id: "mikai",
+    name: "未開の幻洞",
+    orb: 10,
+    startDay: 14,
+    endDay: 29,
+    crossMonth: false
+  },
+  {
+    id: "kinki",
+    name: "禁忌の獄",
+    orb: 55,
+    startDay: 21,
+    endDay: 8,
+    crossMonth: true
+  },
+  {
+    id: "tournament",
+    name: "絶級トーナメント",
+    orb: 30,
+    startDay: 26,
+    endDay: 6,
+    crossMonth: true
+  },
+  {
+    id: "seibo",
+    name: "破界の星墓",
+    orb: 20,
+    startDay: 27,
+    endDay: 21,
+    crossMonth: true
+  }
+];
 
-  <div class="card">
-    <label>
-      <input type="checkbox" class="content" data-orb="10">
-      天魔の孤城：10個
-    </label>
-  </div>
+  function getPeriod(content) {
+    const now = new Date();
 
-  <div class="total">
-    <h2>
-      獲得オーブ合計：
-      <span id="total">0</span>個
-    </h2>
-  </div>
+    const year = now.getFullYear();
+    const month = now.getMonth();
 
-  <button id="resetButton">
-    今月のデータをリセット
-  </button>
+    // 天魔の孤城：毎月1日12時に更新
+    if (content.monthlyReset) {
+      let startDate = new Date(
+        year,
+        month,
+        1,
+        12,
+        0,
+        0
+      );
+
+      let endDate = new Date(
+        year,
+        month + 1,
+        1,
+        12,
+        0,
+        0
+      );
+
+      if (now < startDate) {
+        startDate = new Date(
+          year,
+          month - 1,
+          1,
+          12,
+          0,
+          0
+        );
+
+        endDate = new Date(
+          year,
+          month,
+          1,
+          12,
+          0,
+          0
+        );
+      }
+
+      return {
+        start: startDate,
+        end: endDate
+      };
+    }
+
+    // 月をまたぐコンテンツ
+    if (content.crossMonth) {
+      const thisMonthStart = new Date(
+        year,
+        month,
+        content.startDay,
+        12,
+        0,
+        0
+      );
+
+      let startDate;
+      let endDate;
+
+      if (now >= thisMonthStart) {
+        startDate = thisMonthStart;
+
+        endDate = new Date(
+          year,
+          month + 1,
+          content.endDay,
+          12,
+          0,
+          0
+        );
+      } else {
+        const previousStart = new Date(
+          year,
+          month - 1,
+          content.startDay,
+          12,
+          0,
+          0
+        );
+
+        const previousEnd = new Date(
+          year,
+          month,
+          content.endDay,
+          12,
+          0,
+          0
+        );
+
+        if (now <= previousEnd) {
+          startDate = previousStart;
+          endDate = previousEnd;
+        } else {
+          startDate = thisMonthStart;
+
+          endDate = new Date(
+            year,
+            month + 1,
+            content.endDay,
+            12,
+            0,
+            0
+          );
+        }
+      }
+
+      return {
+        start: startDate,
+        end: endDate
+      };
+    }
+
+    // 同じ月の中で完結するコンテンツ
+    let startDate = new Date(
+      year,
+      month,
+      content.startDay,
+      12,
+      0,
+      0
+    );
+
+    let endDate = new Date(
+      year,
+      month,
+      content.endDay,
+      12,
+      0,
+      0
+    );
+
+    if (now > endDate) {
+      startDate = new Date(
+        year,
+        month + 1,
+        content.startDay,
+        12,
+        0,
+        0
+      );
+
+      endDate = new Date(
+        year,
+        month + 1,
+        content.endDay,
+        12,
+        0,
+        0
+      );
+    }
+
+    return {
+      start: startDate,
+      end: endDate
+    };
+  }
+function getStatusOrder(content) {
+  const now = new Date();
+  const period = getPeriod(content);
+
+  if (now >= period.start && now <= period.end) {
+    return 0; // 開催中
+  }
+
+  if (now < period.start) {
+    return 1; // 開催前
+  }
+
+  return 2; // 終了
+}
+
+const displayOrder = [
+  "tenma",
+  "hasya",
+  "mikai",
+  "kinki",
+  "tournament",
+  "seibo"
+];
+
+contentsData.sort(function(a, b) {
+  const statusA = getStatusOrder(a);
+  const statusB = getStatusOrder(b);
+
+  if (statusA !== statusB) {
+    return statusA - statusB;
+  }
+
+  return (
+    displayOrder.indexOf(a.id) -
+    displayOrder.indexOf(b.id)
+  );
+});
+  function createContents() {
+  contentList.innerHTML = "";
+
+  let currentGroup = "";
+
+  contentsData.forEach(function(content) {
+    const now = new Date();
+    const period = getPeriod(content);
+
+    let groupName = "";
+
+    if (now >= period.start && now <= period.end) {
+      groupName = "開催中";
+    } else if (now < period.start) {
+      groupName = "開催前";
+    } else {
+      groupName = "終了";
+    }
+
+    // グループが変わったら見出しを追加
+    if (groupName !== currentGroup) {
+      const heading = document.createElement("h2");
+      heading.className = "section-title";
+      heading.textContent = groupName;
+
+      contentList.appendChild(heading);
+
+      currentGroup = groupName;
+    }
+
+    const card = document.createElement("div");
+    card.className = "card";
+    card.dataset.id = content.id;
+
+    card.innerHTML = `
+      <label>
+        <input
+          type="checkbox"
+          class="content"
+          id="${content.id}"
+          data-orb="${content.orb}"
+        >
+        ${content.name}：${content.orb}個
+      </label>
+
+      <p id="${content.id}Status">
+        状態を確認中...
+      </p>
+
+      <p id="${content.id}Countdown">
+        計算中...
+      </p>
+    `;
+
+    contentList.appendChild(card);
+  });
+  }
+
+  createContents();
+
+  const checkboxes =
+    document.querySelectorAll(".content");
+
+  function calculateTotal() {
+    let sum = 0;
+
+    checkboxes.forEach(function(checkbox) {
+      if (checkbox.checked) {
+        sum += Number(checkbox.dataset.orb);
+      }
+    });
+
+    total.textContent = sum;
+  }
+
+  function saveData() {
+    const checkedData = {};
+
+    checkboxes.forEach(function(checkbox) {
+      checkedData[checkbox.id] =
+        checkbox.checked;
+    });
+
+    localStorage.setItem(
+      "monstOrbData",
+      JSON.stringify(checkedData)
+    );
+  }
+
+  function checkForNewPeriod() {
+    contentsData.forEach(function(content) {
+      const period = getPeriod(content);
+
+      const periodKey =
+        period.start.getTime() +
+        "_" +
+        period.end.getTime();
+
+      const storageKey =
+        content.id + "_period";
+
+      const savedPeriod =
+        localStorage.getItem(storageKey);
+
+      if (savedPeriod === null) {
+        localStorage.setItem(
+          storageKey,
+          periodKey
+        );
+
+        return;
+      }
+
+      if (savedPeriod !== periodKey) {
+        const checkbox =
+          document.getElementById(content.id);
+
+        checkbox.checked = false;
+
+        localStorage.setItem(
+          storageKey,
+          periodKey
+        );
+      }
+    });
+
+    saveData();
+  }
+
+  function loadData() {
+    const savedData =
+      localStorage.getItem("monstOrbData");
+
+    if (savedData !== null) {
+      const checkedData =
+        JSON.parse(savedData);
+
+      checkboxes.forEach(function(checkbox) {
+        if (
+          checkedData[checkbox.id] !== undefined
+        ) {
+          checkbox.checked =
+            checkedData[checkbox.id];
+        }
+      });
+    }
+
+    checkForNewPeriod();
+    calculateTotal();
+  }
+
+  function formatTime(diff) {
+    const days = Math.floor(
+      diff / (1000 * 60 * 60 * 24)
+    );
+
+    const hours = Math.floor(
+      (diff / (1000 * 60 * 60)) % 24
+    );
+
+    const minutes = Math.floor(
+      (diff / (1000 * 60)) % 60
+    );
+
+    const seconds = Math.floor(
+      (diff / 1000) % 60
+    );
+
+    return (
+      days + "日 " +
+      hours + "時間 " +
+      minutes + "分 " +
+      seconds + "秒"
+    );
+  }
+
+  function updateContents() {
+    const now = new Date();
+
+    currentTime.textContent =
+      now.toLocaleString("ja-JP");
+
+    contentsData.forEach(function(content) {
+      const period = getPeriod(content);
+
+      const startDate = period.start;
+      const endDate = period.end;
+
+      const status =
+        document.getElementById(
+          content.id + "Status"
+        );
+
+      const countdown =
+        document.getElementById(
+          content.id + "Countdown"
+        );
+
+      if (now < startDate) {
+        status.textContent = "開催前";
+
+        countdown.textContent =
+          "開催まで：" +
+          formatTime(startDate - now);
+
+      } else if (now <= endDate) {
+        status.textContent = "開催中";
+
+        if (content.monthlyReset) {
+          countdown.textContent =
+            "次回リセットまで：" +
+            formatTime(endDate - now);
+        } else {
+          countdown.textContent =
+            "終了まで：" +
+            formatTime(endDate - now);
+        }
+
+      } else {
+        status.textContent = "終了";
+        countdown.textContent = "";
+      }
+    });
+  }
+
+  checkboxes.forEach(function(checkbox) {
+    checkbox.addEventListener(
+      "change",
+      function() {
+        calculateTotal();
+        saveData();
+      }
+    );
+  });
+
+  resetButton.addEventListener(
+    "click",
+    function() {
+      checkboxes.forEach(function(checkbox) {
+        checkbox.checked = false;
+      });
+
+      localStorage.removeItem(
+        "monstOrbData"
+      );
+
+      calculateTotal();
+    }
+  );
+
+  loadData();
+  updateContents();
+
+  setInterval(function() {
+    updateContents();
+    checkForNewPeriod();
+  }, 1000);
+</script>
+</body>
 
 </div>
   <script>
-    const contents = document.querySelectorAll(".content");
-    const total = document.getElementById("total");
+    const hasyaStatus = document.getElementById("hasyaStatus");
+const hasyaCountdown = document.getElementById("hasyaCountdown");
 
-    function calculateTotal() {
-      let sum = 0;
+// テスト用の開催期間
+const hasyaStart = new Date("2026-08-10T12:00:00+09:00");
+const hasyaEnd = new Date("2026-08-20T12:00:00+09:00");
 
-      contents.forEach(function(content) {
-        if (content.checked) {
-          sum += Number(content.dataset.orb);
-        }
-      });
+function formatTime(diff) {
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor(
+    (diff / (1000 * 60 * 60)) % 24
+  );
+  const minutes = Math.floor(
+    (diff / (1000 * 60)) % 60
+  );
+  const seconds = Math.floor(
+    (diff / 1000) % 60
+  );
 
-      total.textContent = sum;
-    }
+  return (
+    days + "日 " +
+    hours + "時間 " +
+    minutes + "分 " +
+    seconds + "秒"
+  );
+}
 
     function saveData() {
       const checkedData = [];
@@ -166,6 +677,44 @@ resetButton.addEventListener("click", function() {
 });
 
     loadData();
+    const currentTime = document.getElementById("currentTime");
+const countdown = document.getElementById("countdown");
+
+// テスト用：2026年8月20日 12:00までカウントダウン
+const targetDate = new Date("2026-08-20T12:00:00+09:00");
+
+function updateTime() {
+  const now = new Date();
+
+  currentTime.textContent = now.toLocaleString("ja-JP");
+
+  const diff = targetDate - now;
+
+  if (diff <= 0) {
+    countdown.textContent = "終了しました";
+    return;
+  }
+
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor(
+    (diff / (1000 * 60 * 60)) % 24
+  );
+  const minutes = Math.floor(
+    (diff / (1000 * 60)) % 60
+  );
+  const seconds = Math.floor(
+    (diff / 1000) % 60
+  );
+
+  countdown.textContent =
+    days + "日 " +
+    hours + "時間 " +
+    minutes + "分 " +
+    seconds + "秒";
+}
+
+updateTime();
+setInterval(updateTime, 1000);
   </script>
 </body>
 </html>
