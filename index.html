@@ -34,11 +34,10 @@
     cursor: pointer;
   }
 
-  .card input {
-    transform: scale(1.4);
-    margin-right: 12px;
+  .card input[type="checkbox"] {
+  transform: scale(1.4);
+  margin-right: 12px;
   }
-
   .total {
     background-color: white;
     padding: 20px;
@@ -61,6 +60,60 @@
   margin-bottom: 15px;
   font-size: 26px;
   }
+  .gouzetsu-setting {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 15px;
+  margin-bottom: 20px;
+  padding-right: 10px;
+  margin-left: 0;
+  padding-left: 0;
+}
+
+.gouzetsu-setting label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.gouzetsu-setting input {
+  display: block;
+  width: 300px;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  font-size: 16px;
+  margin-top: 8px;
+  margin-left: 0;
+}
+.content-label {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.content-image {
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.content-name {
+  font-size: 20px;
+}
+.bonus-row {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.bonus-image {
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
 </style>
 </head>
 <body>
@@ -74,29 +127,100 @@
     </div>
 
     <div id="contentList"></div>
+<div class="card">
+  <h2>自動獲得オーブ</h2>
+
+  <div class="bonus-row">
+    <img
+      src="images/login.png"
+      alt="ログインオーブ"
+      class="bonus-image"
+    >
+
+    <p>
+      ログインオーブ：
+      <span id="loginOrbTotal">0</span>個
+    </p>
+  </div>
+  <p>
+  獲得オーブ：
+  <span id="gouzetsuOrbTotal">0</span>個
+</p>
+
+<p id="gouzetsuCountdown">
+  開始日時を設定してください
+</p>
+
+  <hr>
+
+  <div class="bonus-row">
+    <img
+      src="images/gouzetsu.avif"
+      alt="轟絶ボーナス"
+      class="bonus-image"
+    >
+
+    <h3>轟絶ボーナス</h3>
+  </div>
+
+  <div class="gouzetsu-setting">
+    <label for="gouzetsuStart">
+      ボーナス開始日時
+    </label>
+
+    <input
+      type="datetime-local"
+      id="gouzetsuStart"
+    >
+  </div>
+<p>
+  獲得オーブ：
+  <span id="gouzetsuOrbTotal">0</span>個
+</p>
+
+<p id="gouzetsuCountdown">
+  開始日時を設定してください
+</p>
+  <button id="resetLoginButton">
+    ログインオーブをリセット
+  </button>
+</div>
 
     <div class="total">
       <h2>
         獲得オーブ合計：
         <span id="total">0</span>個
       </h2>
+      <button id="resetButton">
+        今月のデータをリセット
+      </button>
     </div>
-
-    <button id="resetButton">
-      今月のデータをリセット
-    </button>
   </div>
 
   <script>
+  const resetLoginButton =
+  document.getElementById("resetLoginButton");
   const contentList = document.getElementById("contentList");
   const total = document.getElementById("total");
   const currentTime = document.getElementById("currentTime");
   const resetButton = document.getElementById("resetButton");
+  const loginOrbTotal =
+  document.getElementById("loginOrbTotal");
+
+const gouzetsuStart =
+  document.getElementById("gouzetsuStart");
+
+const gouzetsuOrbTotal =
+  document.getElementById("gouzetsuOrbTotal");
+
+const gouzetsuCountdown =
+  document.getElementById("gouzetsuCountdown");
 
   const contentsData = [
   {
     id: "tenma",
     name: "天魔の孤城",
+    icon: "images/tenma.png",
     orb: 5,
     startDay: 1,
     monthlyReset: true
@@ -104,42 +228,48 @@
   {
     id: "hasya",
     name: "覇者の塔",
+    icon: "images/hasya.png",
     orb: 68,
     startDay: 7,
     endDay: 25,
-    crossMonth: false
+    crossMonth: false,
   },
   {
     id: "mikai",
     name: "未開の幻洞",
+    icon: "images/mikai.png",
     orb: 10,
     startDay: 14,
     endDay: 29,
-    crossMonth: false
+    crossMonth: false,
   },
   {
     id: "kinki",
     name: "禁忌の獄",
+    icon: "images/kinki.png",
     orb: 55,
     startDay: 21,
     endDay: 8,
-    crossMonth: true
+    crossMonth: true,
   },
   {
     id: "tournament",
     name: "絶級トーナメント",
+    icon: "images/tournament.png",
     orb: 30,
     startDay: 26,
     endDay: 6,
-    crossMonth: true
+    crossMonth: true,
+    
   },
   {
     id: "seibo",
     name: "破界の星墓",
+    icon: "images/seibo.png",
     orb: 20,
     startDay: 27,
     endDay: 21,
-    crossMonth: true
+    crossMonth: true,
   }
 ];
 
@@ -378,24 +508,29 @@ contentsData.sort(function(a, b) {
     card.dataset.id = content.id;
 
     card.innerHTML = `
-      <label>
-        <input
-          type="checkbox"
-          class="content"
-          id="${content.id}"
-          data-orb="${content.orb}"
-        >
-        ${content.name}：${content.orb}個
-      </label>
+  <label class="content-label">
+    <input
+      type="checkbox"
+      class="content"
+      id="${content.id}"
+      data-orb="${content.orb}"
+    >
 
-      <p id="${content.id}Status">
-        状態を確認中...
-      </p>
+    <img
+      src="${content.icon}"
+      alt="${content.name}"
+      class="content-image"
+    >
 
-      <p id="${content.id}Countdown">
-        計算中...
-      </p>
-    `;
+    <span class="content-name">
+      ${content.name}：${content.orb}個
+    </span>
+  </label>
+
+  <p id="${content.id}Countdown">
+    計算中...
+  </p>
+`;
 
     contentList.appendChild(card);
   });
@@ -405,18 +540,123 @@ contentsData.sort(function(a, b) {
 
   const checkboxes =
     document.querySelectorAll(".content");
+function calculateLoginOrb() {
+  const now = new Date();
 
-  function calculateTotal() {
-    let sum = 0;
+  let savedStart =
+    localStorage.getItem("loginOrbStart");
 
-    checkboxes.forEach(function(checkbox) {
-      if (checkbox.checked) {
-        sum += Number(checkbox.dataset.orb);
-      }
-    });
+  let startDate;
 
-    total.textContent = sum;
+  if (savedStart === null) {
+    // 初回は今月1日から計算
+    startDate = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      1,
+      0,
+      0,
+      0
+    );
+
+    localStorage.setItem(
+      "loginOrbStart",
+      startDate.toISOString()
+    );
+  } else {
+    startDate = new Date(savedStart);
   }
+
+  const oneDay =
+    24 * 60 * 60 * 1000;
+
+  const daysPassed =
+    Math.floor(
+      (now - startDate) / oneDay
+    );
+
+  const orb =
+    Math.max(daysPassed, 0) * 2;
+
+  loginOrbTotal.textContent = orb;
+
+  return orb;
+}
+
+function calculateGouzetsuOrb() {
+  if (!gouzetsuStart.value) {
+    gouzetsuOrbTotal.textContent = "0";
+    gouzetsuCountdown.textContent =
+      "開始日時を設定してください";
+
+    return 0;
+  }
+
+  const start = new Date(gouzetsuStart.value);
+  const now = new Date();
+
+  const oneWeek =
+    7 * 24 * 60 * 60 * 1000;
+
+  const elapsed = now - start;
+
+  if (elapsed < 0) {
+    gouzetsuOrbTotal.textContent = "0";
+    gouzetsuCountdown.textContent =
+      "開始前です";
+
+    return 0;
+  }
+
+  const weeksPassed =
+    Math.floor(elapsed / oneWeek);
+
+  const orb = weeksPassed * 5;
+
+  gouzetsuOrbTotal.textContent = orb;
+
+  const nextDate =
+    new Date(
+      start.getTime() +
+      (weeksPassed + 1) * oneWeek
+    );
+
+  gouzetsuCountdown.textContent =
+    "次回獲得まで：" +
+    formatTime(nextDate - now);
+
+  return orb;
+}
+  function calculateTotal() {
+  let sum = 0;
+
+  checkboxes.forEach(function(checkbox) {
+    if (checkbox.checked) {
+      sum += Number(checkbox.dataset.orb);
+    }
+  });
+  resetLoginButton.addEventListener(
+  "click",
+  function() {
+    const now = new Date();
+
+    localStorage.setItem(
+      "loginOrbStart",
+      now.toISOString()
+    );
+
+    calculateTotal();
+  }
+);
+
+  // 毎日のログインオーブ
+  sum += calculateLoginOrb();
+
+  // 轟絶ボーナス
+  sum += calculateGouzetsuOrb();
+
+  total.textContent = sum;
+}
 
   function saveData() {
     const checkedData = {};
@@ -531,25 +771,18 @@ contentsData.sort(function(a, b) {
       const startDate = period.start;
       const endDate = period.end;
 
-      const status =
-        document.getElementById(
-          content.id + "Status"
-        );
-
       const countdown =
         document.getElementById(
           content.id + "Countdown"
         );
 
       if (now < startDate) {
-        status.textContent = "開催前";
 
         countdown.textContent =
           "開催まで：" +
           formatTime(startDate - now);
 
       } else if (now <= endDate) {
-        status.textContent = "開催中";
 
         if (content.monthlyReset) {
           countdown.textContent =
@@ -562,7 +795,6 @@ contentsData.sort(function(a, b) {
         }
 
       } else {
-        status.textContent = "終了";
         countdown.textContent = "";
       }
     });
@@ -592,14 +824,32 @@ contentsData.sort(function(a, b) {
       calculateTotal();
     }
   );
+const savedGouzetsuStart =
+  localStorage.getItem("gouzetsuStart");
 
+if (savedGouzetsuStart !== null) {
+  gouzetsuStart.value = savedGouzetsuStart;
+}
+
+gouzetsuStart.addEventListener(
+  "change",
+  function() {
+    localStorage.setItem(
+      "gouzetsuStart",
+      gouzetsuStart.value
+    );
+
+    calculateTotal();
+  }
+);
   loadData();
   updateContents();
 
   setInterval(function() {
-    updateContents();
-    checkForNewPeriod();
-  }, 1000);
+  updateContents();
+  checkForNewPeriod();
+  calculateTotal();
+}, 1000);
 </script>
 </body>
 
