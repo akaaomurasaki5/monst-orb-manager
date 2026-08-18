@@ -114,6 +114,103 @@
   object-fit: contain;
   flex-shrink: 0;
 }
+@media (max-width: 600px) {
+  body {
+    padding: 10px;
+  }
+
+  .container {
+    width: 100%;
+  }
+
+  .card {
+    padding: 15px;
+  }
+
+  .content-image,
+  .bonus-image {
+    width: 55px;
+    height: 55px;
+  }
+
+  .content-name {
+    font-size: 17px;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+}
+.forecast-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.forecast-buttons button {
+  width: auto;
+  padding: 8px 14px;
+  margin-top: 0;
+}
+
+.forecast-date {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.forecast-date label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.forecast-date input {
+  padding: 8px;
+  font-size: 16px;
+}
+.forecast-event-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-size: 20px;
+}
+
+.forecast-event-icon {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  vertical-align: middle;
+}
+
+.forecast-breakdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0;
+  font-size: 20px;
+}
+
+.forecast-breakdown-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.forecast-check-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.forecast-event-icon {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  vertical-align: middle;
+  margin: 0 8px;
+}
 </style>
 </head>
 <body>
@@ -128,8 +225,11 @@
 
     <div id="contentList"></div>
 <div class="card">
+<div class="card">
+<div class="card">
   <h2>自動獲得オーブ</h2>
 
+  <!-- ログインオーブ -->
   <div class="bonus-row">
     <img
       src="images/login.png"
@@ -137,22 +237,28 @@
       class="bonus-image"
     >
 
-    <p>
+    <h3>
       ログインオーブ：
       <span id="loginOrbTotal">0</span>個
-    </p>
+    </h3>
   </div>
-  <p>
-  獲得オーブ：
-  <span id="gouzetsuOrbTotal">0</span>個
-</p>
 
-<p id="gouzetsuCountdown">
-  開始日時を設定してください
-</p>
+  <p>
+    獲得オーブ：
+    <span id="loginOrbEarned">0</span>個
+  </p>
+
+  <p id="loginCountdown">
+    次回獲得まで：計算中...
+  </p>
+
+  <button id="resetLoginButton">
+    ログインオーブをリセット
+  </button>
 
   <hr>
 
+  <!-- 轟絶ボーナス -->
   <div class="bonus-row">
     <img
       src="images/gouzetsu.avif"
@@ -173,19 +279,58 @@
       id="gouzetsuStart"
     >
   </div>
-<p>
-  獲得オーブ：
-  <span id="gouzetsuOrbTotal">0</span>個
-</p>
 
-<p id="gouzetsuCountdown">
-  開始日時を設定してください
-</p>
-  <button id="resetLoginButton">
-    ログインオーブをリセット
+  <p>
+    獲得オーブ：
+    <span id="gouzetsuOrbTotal">0</span>個
+  </p>
+
+  <p id="gouzetsuCountdown">
+    開始日時を設定してください
+  </p>
+</div>
+
+  <hr>
+
+</div>
+<div class="card">
+  <h2>期間内の獲得オーブ予測</h2>
+
+    <div class="forecast-date">
+    <label>
+      開始日
+      <input type="date" id="forecastStart">
+    </label>
+
+    <label>
+      終了日
+      <input type="date" id="forecastEnd">
+    </label>
+  </div>
+
+  <h3>予測に含めるコンテンツ</h3>
+
+<div class="forecast-buttons">
+  <button type="button" id="selectAllForecast">
+    すべて選択
+  </button>
+
+  <button type="button" id="clearAllForecast">
+    すべて解除
   </button>
 </div>
 
+<div id="forecastEventList">
+  <p>開始日と終了日を選択してください。</p>
+</div>
+
+  <h3>
+    予想獲得オーブ：
+    <span id="forecastOrbTotal">0</span>個
+  </h3>
+
+  <div id="forecastBreakdown"></div>
+</div>
     <div class="total">
       <h2>
         獲得オーブ合計：
@@ -202,11 +347,35 @@
   document.getElementById("resetLoginButton");
   const contentList = document.getElementById("contentList");
   const total = document.getElementById("total");
-  const currentTime = document.getElementById("currentTime");
+  const currenttime = document.getElementById("currentTime");
   const resetButton = document.getElementById("resetButton");
   const loginOrbTotal =
   document.getElementById("loginOrbTotal");
+  const loginOrbEarned =
+  document.getElementById("loginOrbEarned");
+const loginCountdown =
+  document.getElementById("loginCountdown");
+const forecastOrbTotal =
+  document.getElementById("forecastOrbTotal");
+const forecastStart =
+  document.getElementById("forecastStart");
 
+const forecastEnd =
+  document.getElementById("forecastEnd");
+
+const forecastButton =
+  document.getElementById("forecastButton");
+
+const selectAllForecast =
+  document.getElementById("selectAllForecast");
+
+const clearAllForecast =
+  document.getElementById("clearAllForecast");
+const forecastBreakdown =
+  document.getElementById("forecastBreakdown");
+
+  const forecastEventList =
+  document.getElementById("forecastEventList");
 const gouzetsuStart =
   document.getElementById("gouzetsuStart");
 
@@ -549,15 +718,7 @@ function calculateLoginOrb() {
   let startDate;
 
   if (savedStart === null) {
-    // 初回は今月1日から計算
-    startDate = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      1,
-      0,
-      0,
-      0
-    );
+    startDate = new Date();
 
     localStorage.setItem(
       "loginOrbStart",
@@ -567,18 +728,67 @@ function calculateLoginOrb() {
     startDate = new Date(savedStart);
   }
 
+  // リセット後、最初に来る朝4:00
+  let firstReward = new Date(startDate);
+
+  firstReward.setHours(4, 0, 0, 0);
+
+  if (startDate >= firstReward) {
+    firstReward.setDate(
+      firstReward.getDate() + 1
+    );
+  }
+
   const oneDay =
     24 * 60 * 60 * 1000;
 
-  const daysPassed =
-    Math.floor(
-      (now - startDate) / oneDay
+  let rewardCount = 0;
+
+  if (now >= firstReward) {
+    rewardCount =
+      Math.floor(
+        (now - firstReward) / oneDay
+      ) + 1;
+  }
+
+  // 毎朝4時ごとに2個
+  const orb =
+    rewardCount * 2;
+
+  loginOrbTotal.textContent = 2;
+  loginOrbEarned.textContent = orb;
+  calculateTotal();
+
+  // 次の朝4:00
+  const nextReward =
+    new Date(
+      firstReward.getTime() +
+      rewardCount * oneDay
     );
 
-  const orb =
-    Math.max(daysPassed, 0) * 2;
+  const diff =
+    nextReward - now;
 
-  loginOrbTotal.textContent = orb;
+  const hours =
+    Math.floor(
+      diff / (1000 * 60 * 60)
+    );
+
+  const minutes =
+    Math.floor(
+      (diff / (1000 * 60)) % 60
+    );
+
+  const seconds =
+    Math.floor(
+      (diff / 1000) % 60
+    );
+
+  loginCountdown.textContent =
+    "次回獲得まで：" +
+    hours + "時間 " +
+    minutes + "分 " +
+    seconds + "秒";
 
   return orb;
 }
@@ -627,88 +837,434 @@ function calculateGouzetsuOrb() {
 
   return orb;
 }
-  function calculateTotal() {
-  let sum = 0;
+function autoSelectForecastContents() {
+  if (!forecastStart.value || !forecastEnd.value) {
+    return;
+  }
 
+  const rangeStart =
+    new Date(forecastStart.value + "T00:00:00");
+
+  const rangeEnd =
+    new Date(forecastEnd.value + "T23:59:59");
+
+  if (rangeEnd < rangeStart) {
+    return;
+  }
+
+  forecastCheckboxes.forEach(function(checkbox) {
+    const content = contentsData.find(function(item) {
+      return item.id === checkbox.value;
+    });
+
+    if (!content) {
+      checkbox.checked = false;
+      return;
+    }
+
+    let isIncluded = false;
+
+    // 開始月の1か月前から確認
+    let year = rangeStart.getFullYear();
+    let month = rangeStart.getMonth() - 1;
+
+    if (month < 0) {
+      month = 11;
+      year--;
+    }
+
+    const endYear = rangeEnd.getFullYear();
+    const endMonth = rangeEnd.getMonth();
+
+    while (
+      year < endYear ||
+      (year === endYear && month <= endMonth)
+    ) {
+      let startDate;
+      let endDate;
+
+      if (content.monthlyReset) {
+        startDate = new Date(
+          year,
+          month,
+          1,
+          12,
+          0,
+          0
+        );
+
+        endDate = new Date(
+          year,
+          month + 1,
+          1,
+          12,
+          0,
+          0
+        );
+
+      } else if (content.crossMonth) {
+        startDate = new Date(
+          year,
+          month,
+          content.startDay,
+          12,
+          0,
+          0
+        );
+
+        endDate = new Date(
+          year,
+          month + 1,
+          content.endDay,
+          12,
+          0,
+          0
+        );
+
+      } else {
+        startDate = new Date(
+          year,
+          month,
+          content.startDay,
+          12,
+          0,
+          0
+        );
+
+        endDate = new Date(
+          year,
+          month,
+          content.endDay,
+          12,
+          0,
+          0
+        );
+      }
+
+      if (
+        startDate <= rangeEnd &&
+        endDate >= rangeStart
+      ) {
+        isIncluded = true;
+        break;
+      }
+
+      month++;
+
+      if (month > 11) {
+        month = 0;
+        year++;
+      }
+    }
+
+    checkbox.checked = isIncluded;
+  });
+}
+function formatForecastDate(date) {
+  return (
+    (date.getMonth() + 1) +
+    "/" +
+    date.getDate()
+  );
+}
+function updateForecastTotal() {
+  let total = 0;
+
+  const checkedEvents =
+    document.querySelectorAll(
+      ".forecast-event:checked"
+    );
+
+  checkedEvents.forEach(function(checkbox) {
+    total += Number(checkbox.dataset.orb);
+  });
+
+  forecastOrbTotal.textContent = total;
+}
+function calculateTotal() {
+  let totalOrbs = 0;
+
+  // 定期コンテンツのチェック済みオーブ
   checkboxes.forEach(function(checkbox) {
     if (checkbox.checked) {
-      sum += Number(checkbox.dataset.orb);
+      const content = contentsData.find(function(item) {
+        return item.id === checkbox.id;
+      });
+
+      if (content) {
+        totalOrbs += content.orb;
+      }
     }
   });
-  resetLoginButton.addEventListener(
-  "click",
-  function() {
-    const now = new Date();
 
-    localStorage.setItem(
-      "loginOrbStart",
-      now.toISOString()
-    );
-
-    calculateTotal();
-  }
-);
-
-  // 毎日のログインオーブ
-  sum += calculateLoginOrb();
+  // ログインオーブ
+  const loginOrbs =
+    Number(loginOrbEarned.textContent) || 0;
 
   // 轟絶ボーナス
-  sum += calculateGouzetsuOrb();
+  const gouzetsuOrbs =
+    Number(gouzetsuOrbTotal.textContent) || 0;
 
-  total.textContent = sum;
+  totalOrbs += loginOrbs;
+  totalOrbs += gouzetsuOrbs;
+
+  total.textContent = totalOrbs;
 }
-
-  function saveData() {
-    const checkedData = {};
-
-    checkboxes.forEach(function(checkbox) {
-      checkedData[checkbox.id] =
-        checkbox.checked;
-    });
-
-    localStorage.setItem(
-      "monstOrbData",
-      JSON.stringify(checkedData)
-    );
+function generateForecastEvents() {
+  if (!forecastStart.value || !forecastEnd.value) {
+    forecastEventList.innerHTML =
+      "<p>開始日と終了日を選択してください。</p>";
+    return;
   }
 
-  function checkForNewPeriod() {
-    contentsData.forEach(function(content) {
-      const period = getPeriod(content);
+  const rangeStart =
+    new Date(forecastStart.value + "T00:00:00");
 
-      const periodKey =
-        period.start.getTime() +
-        "_" +
-        period.end.getTime();
+  const rangeEnd =
+    new Date(forecastEnd.value + "T23:59:59");
 
-      const storageKey =
-        content.id + "_period";
+  if (rangeEnd < rangeStart) {
+    forecastEventList.innerHTML =
+      "<p>終了日は開始日以降にしてください。</p>";
+    return;
+  }
 
-      const savedPeriod =
-        localStorage.getItem(storageKey);
+  forecastEventList.innerHTML = "";
 
-      if (savedPeriod === null) {
-        localStorage.setItem(
-          storageKey,
-          periodKey
+  let eventNumber = 0;
+
+  contentsData.forEach(function(content) {
+
+    // 月をまたぐイベントを拾うため、
+    // 開始日の1か月前から調べる
+    let year = rangeStart.getFullYear();
+    let month = rangeStart.getMonth() - 1;
+
+    if (month < 0) {
+      month = 11;
+      year--;
+    }
+
+    const endYear = rangeEnd.getFullYear();
+    const endMonth = rangeEnd.getMonth();
+
+    while (
+      year < endYear ||
+      (year === endYear && month <= endMonth)
+    ) {
+      let startDate;
+      let endDate;
+
+      if (content.monthlyReset) {
+
+        startDate = new Date(
+          year,
+          month,
+          1,
+          12,
+          0,
+          0
         );
 
-        return;
-      }
+        endDate = new Date(
+          year,
+          month + 1,
+          1,
+          12,
+          0,
+          0
+        );
 
-      if (savedPeriod !== periodKey) {
-        const checkbox =
-          document.getElementById(content.id);
+      } else if (content.crossMonth) {
 
-        checkbox.checked = false;
+        startDate = new Date(
+          year,
+          month,
+          content.startDay,
+          12,
+          0,
+          0
+        );
 
-        localStorage.setItem(
-          storageKey,
-          periodKey
+        endDate = new Date(
+          year,
+          month + 1,
+          content.endDay,
+          12,
+          0,
+          0
+        );
+
+      } else {
+
+        startDate = new Date(
+          year,
+          month,
+          content.startDay,
+          12,
+          0,
+          0
+        );
+
+        endDate = new Date(
+          year,
+          month,
+          content.endDay,
+          12,
+          0,
+          0
         );
       }
-    });
 
+      // 指定期間と開催期間が重なっている場合
+      if (
+        startDate <= rangeEnd &&
+        endDate >= rangeStart
+      ) {
+        eventNumber++;
+
+        const row =
+          document.createElement("div");
+
+        row.className = "forecast-event-row";
+
+        row.innerHTML = `
+          <label>
+            <input
+              type="checkbox"
+              class="forecast-event"
+              data-orb="${content.orb}"
+              data-name="${content.name}"
+              checked
+            >
+
+            <img
+      src="${content.icon}"
+      alt="${content.name}"
+      class="forecast-event-icon"
+            >
+
+            ${content.name}
+            （${formatForecastDate(startDate)}
+            ～${formatForecastDate(endDate)}）
+            ：${content.orb}個
+          </label>
+        `;
+        const eventCheckbox =
+        row.querySelector(".forecast-event");
+
+        eventCheckbox.dataset.period =
+        formatForecastDate(startDate) 
+        +"～" +
+        formatForecastDate(endDate);
+        
+        eventCheckbox.dataset.icon =
+        content.icon;
+
+        forecastEventList.appendChild(row);
+      }
+
+      month++;
+
+      if (month > 11) {
+        month = 0;
+        year++;
+      }
+    }
+  });
+  // ログインオーブ
+const oneDay = 24 * 60 * 60 * 1000;
+
+const startDay = new Date(
+  rangeStart.getFullYear(),
+  rangeStart.getMonth(),
+  rangeStart.getDate()
+);
+
+const endDay = new Date(
+  rangeEnd.getFullYear(),
+  rangeEnd.getMonth(),
+  rangeEnd.getDate()
+);
+
+const days =
+  Math.round((endDay - startDay) / oneDay) + 1;
+
+const loginOrbs = days * 2;
+
+const loginRow = document.createElement("div");
+
+loginRow.innerHTML = `
+  <label>
+    <input
+      type="checkbox"
+      class="forecast-event"
+      data-orb="${loginOrbs}"
+      checked
+    >
+
+    <img
+      src="images/login.png"
+      class="forecast-event-icon"
+      alt="ログインオーブ"
+    >
+
+    ログインオーブ
+    （${formatForecastDate(rangeStart)}
+    ～${formatForecastDate(rangeEnd)}）
+    ：${loginOrbs}個
+  </label>
+`;
+
+forecastEventList.appendChild(loginRow);
+
+
+// 轟絶ボーナス
+let gouzetsuOrbs = 0;
+let gouzetsuCount = 0;
+
+if (gouzetsuStart.value) {
+  const start = new Date(gouzetsuStart.value);
+  const oneWeek = 7 * oneDay;
+
+  let nextReward =
+    new Date(start.getTime() + oneWeek);
+
+  while (nextReward <= rangeEnd) {
+    if (nextReward >= rangeStart) {
+      gouzetsuOrbs += 5;
+      gouzetsuCount++;
+    }
+
+    nextReward =
+      new Date(nextReward.getTime() + oneWeek);
+  }
+}
+
+const gouzetsuRow = document.createElement("div");
+
+gouzetsuRow.innerHTML = `
+  <label>
+    <input
+      type="checkbox"
+      class="forecast-event"
+      data-orb="${gouzetsuOrbs}"
+      checked
+    >
+
+    <img
+      src="images/gouzetsu.avif"
+      class="forecast-event-icon"
+      alt="轟絶ボーナス"
+    >
+
+    轟絶ボーナス
+    （期間内${gouzetsuCount}回）
+    ：${gouzetsuOrbs}個
+  </label>
+`;
+
+forecastEventList.appendChild(gouzetsuRow);
     saveData();
   }
 
@@ -729,9 +1285,6 @@ function calculateGouzetsuOrb() {
         }
       });
     }
-
-    checkForNewPeriod();
-    calculateTotal();
   }
 
   function formatTime(diff) {
@@ -799,31 +1352,21 @@ function calculateGouzetsuOrb() {
       }
     });
   }
+checkboxes.forEach(function(checkbox) {
+  checkbox.addEventListener(
+    "change",
+    updateForecastTotal
+  );
+});
 
+resetButton.addEventListener("click", function() {
   checkboxes.forEach(function(checkbox) {
-    checkbox.addEventListener(
-      "change",
-      function() {
-        calculateTotal();
-        saveData();
-      }
-    );
+    checkbox.checked = false;
   });
 
-  resetButton.addEventListener(
-    "click",
-    function() {
-      checkboxes.forEach(function(checkbox) {
-        checkbox.checked = false;
-      });
+  localStorage.removeItem("monstOrbData");
+});
 
-      localStorage.removeItem(
-        "monstOrbData"
-      );
-
-      calculateTotal();
-    }
-  );
 const savedGouzetsuStart =
   localStorage.getItem("gouzetsuStart");
 
@@ -842,129 +1385,85 @@ gouzetsuStart.addEventListener(
     calculateTotal();
   }
 );
-  loadData();
-  updateContents();
 
-  setInterval(function() {
-  updateContents();
-  checkForNewPeriod();
-  calculateTotal();
-}, 1000);
-</script>
-</body>
+resetLoginButton.addEventListener("click", function() {
+  const now = new Date();
 
-</div>
-  <script>
-    const hasyaStatus = document.getElementById("hasyaStatus");
-const hasyaCountdown = document.getElementById("hasyaCountdown");
-
-// テスト用の開催期間
-const hasyaStart = new Date("2026-08-10T12:00:00+09:00");
-const hasyaEnd = new Date("2026-08-20T12:00:00+09:00");
-
-function formatTime(diff) {
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor(
-    (diff / (1000 * 60 * 60)) % 24
-  );
-  const minutes = Math.floor(
-    (diff / (1000 * 60)) % 60
-  );
-  const seconds = Math.floor(
-    (diff / 1000) % 60
+  localStorage.setItem(
+    "loginOrbStart",
+    now.toISOString()
   );
 
-  return (
-    days + "日 " +
-    hours + "時間 " +
-    minutes + "分 " +
-    seconds + "秒"
-  );
-}
-
-    function saveData() {
-      const checkedData = [];
-
-      contents.forEach(function(content) {
-        checkedData.push(content.checked);
-      });
-
-      localStorage.setItem(
-        "monstOrbData",
-        JSON.stringify(checkedData)
-      );
-    }
-
-    function loadData() {
-      const savedData = localStorage.getItem("monstOrbData");
-
-      if (savedData !== null) {
-        const checkedData = JSON.parse(savedData);
-
-        contents.forEach(function(content, index) {
-          content.checked = checkedData[index];
-        });
-      }
-
-      calculateTotal();
-    }
-
-    contents.forEach(function(content) {
-      content.addEventListener("change", function() {
-        calculateTotal();
-        saveData();
-      });
-    });
-const resetButton = document.getElementById("resetButton");
-
-resetButton.addEventListener("click", function() {
-  contents.forEach(function(content) {
-    content.checked = false;
-  });
-
-  localStorage.removeItem("monstOrbData");
+  calculateLoginOrb();
   calculateTotal();
 });
 
-    loadData();
-    const currentTime = document.getElementById("currentTime");
-const countdown = document.getElementById("countdown");
+selectAllForecast.addEventListener(
+  "click",
+  function() {
+    document
+      .querySelectorAll(".forecast-event")
+      .forEach(function(checkbox) {
+        checkbox.checked = true;
+      });
 
-// テスト用：2026年8月20日 12:00までカウントダウン
-const targetDate = new Date("2026-08-20T12:00:00+09:00");
-
-function updateTime() {
-  const now = new Date();
-
-  currentTime.textContent = now.toLocaleString("ja-JP");
-
-  const diff = targetDate - now;
-
-  if (diff <= 0) {
-    countdown.textContent = "終了しました";
-    return;
+    updateForecastTotal();
   }
+);
 
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor(
-    (diff / (1000 * 60 * 60)) % 24
-  );
-  const minutes = Math.floor(
-    (diff / (1000 * 60)) % 60
-  );
-  const seconds = Math.floor(
-    (diff / 1000) % 60
-  );
+clearAllForecast.addEventListener(
+  "click",
+  function() {
+    document
+      .querySelectorAll(".forecast-event")
+      .forEach(function(checkbox) {
+        checkbox.checked = false;
+      });
 
-  countdown.textContent =
-    days + "日 " +
-    hours + "時間 " +
-    minutes + "分 " +
-    seconds + "秒";
-}
+    updateForecastTotal();
+  }
+);
 
-updateTime();
-setInterval(updateTime, 1000);
-  </script>
+updateForecastTotal();
+
+forecastStart.addEventListener(
+  "change",
+  function() {
+    if (
+      forecastStart.value &&
+      forecastEnd.value
+    ) {
+      generateForecastEvents();
+      updateForecastTotal();
+    }
+  }
+);
+
+forecastEnd.addEventListener(
+  "change",
+  function() {
+    if (
+      forecastStart.value &&
+      forecastEnd.value
+    ) {
+      generateForecastEvents();
+      updateForecastTotal();
+    }
+  }
+);
+  loadData();
+
+  updateContents();
+  calculateLoginOrb();
+  calculateGouzetsuOrb();
+  updateForecastTotal();
+
+  setInterval(function() {
+  updateContents();
+  calculateLoginOrb();
+  calculateGouzetsuOrb();
+  updateForecastTotal();
+}, 1000);
+</script>
 </body>
 </html>
